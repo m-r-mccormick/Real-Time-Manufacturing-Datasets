@@ -1,0 +1,7 @@
+.idea/
+tooling/ignition/build/modules/*.modl
+tooling/ignition/restore/*.gwbk
+tooling/player/datasets/*.jsonl
+tooling/player/datasets/*.7z
+tooling/player/datasets/*.7z.tmp
+

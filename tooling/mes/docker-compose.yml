@@ -1,0 +1,46 @@
+services:
+
+  mes-app:
+    image: rtmd-mes-app
+    container_name: rtmd-mes-app
+    build:
+      context: build
+    hostname: mes-app
+    networks:
+      - rtmd-network
+    environment:
+      - MQTT_BROKER_HOST=broker
+      - MQTT_BROKER_PORT=1883
+      - MQTT_SUBSCRIPTION=#
+      - RTMD_DATABASE_NAME=MES
+      - MARIADB_HOST=mes-db
+      - MARIADB_PORT=3306
+      - MARIADB_DATABASE=mes
+      - MARIADB_USER=admin
+      - MARIADB_PASSWORD=password
+    depends_on:
+      - mes-db
+
+  mes-db:
+    image: mariadb:latest
+    container_name: rtmd-mes-db
+    hostname: mes-db
+    networks:
+      - rtmd-network
+    ports:
+      - '3307:3306'
+    environment:
+      MARIADB_USER: admin
+      MARIADB_PASSWORD: password
+      MARIADB_DATABASE: mes
+      MARIADB_ROOT_PASSWORD: password
+    volumes:
+      - mes-data:/var/lib/mysql
+
+volumes:
+  mes-data:
+    name: 'rtmd-mes'
+
+networks:
+  rtmd-network:
+    name: 'rtmd-network'

@@ -1,0 +1,23 @@
+services:
+
+  player:
+    image: rtmd-player
+    restart: unless-stopped
+    container_name: rtmd-player
+    build:
+      context: build
+    hostname: player
+    networks:
+      - rtmd-network
+    environment:
+      - BROKER_HOST=broker
+      - BROKER_PORT=1883
+      - MODE=replay
+#      - MODE=capture
+#      - BROKER_SUBSCRIPTION=#
+    volumes:
+      - ./datasets/:/datasets/
+
+networks:
+  rtmd-network:
+    name: 'rtmd-network'

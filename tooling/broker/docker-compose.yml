@@ -1,0 +1,16 @@
+services:
+
+  broker:
+    image: eclipse-mosquitto
+    container_name: rtmd-broker
+    hostname: broker
+    networks:
+      - rtmd-network
+    ports:
+      - '1883:1883'
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+networks:
+  rtmd-network:
+    name: 'rtmd-network'

@@ -1,0 +1,54 @@
+services:
+
+  ignition:
+    image: rtmd-ignition
+    container_name: rtmd-ignition
+    hostname: ignition
+    restart: unless-stopped
+    user: 0:0
+    build:
+      context: build
+      args:
+        IGNITION_VERSION: 8.1
+    networks:
+      - rtmd-network
+    ports:
+      - '8088:8088'
+    command: >
+      -r /restore.gwbk
+    environment:
+      - DISABLE_QUICKSTART=true
+      - GATEWAY_ADMIN_USERNAME=admin
+      - GATEWAY_ADMIN_PASSWORD=password
+      - IGNITION_EDITION=standard
+      - TZ=America/New_York
+      - GATEWAY_MODULES_ENABLED=all
+    volumes:
+      - ignition-data:/usr/local/bin/ignition/data
+      - ./restore/base.gwbk:/restore.gwbk:ro
+
+  historian:
+    image: mariadb:latest
+    container_name: rtmd-network-historian
+    hostname: historian
+    networks:
+      - rtmd-network
+    ports:
+      - '3306:3306'
+    environment:
+      MARIADB_USER: admin
+      MARIADB_PASSWORD: password
+      MARIADB_DATABASE: ignition
+      MARIADB_ROOT_PASSWORD: password
+    volumes:
+      - historian-data:/var/lib/mysql
+
+volumes:
+  ignition-data:
+    name: 'rtmd-ignition'
+  historian-data:
+    name: 'rtmd-historian'
+
+networks:
+  rtmd-network:
+    name: 'rtmd-network'

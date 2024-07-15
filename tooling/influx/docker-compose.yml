@@ -1,0 +1,47 @@
+
+services:
+
+  influx:
+    image: influxdb
+    container_name: rtmd-influx-db
+    hostname: rtmd-influx-db
+    networks:
+      - rtmd-network
+    ports:
+      - '8086:8086' # HTTP/HTTPS GUI
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_ORG=myorg
+      - DOCKER_INFLUXDB_INIT_BUCKET=telegraf
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=password
+    volumes:
+      - influx-data:/var/lib/influxdb2
+
+  telegraf:
+    image: telegraf
+    container_name: rtmd-influx-telegraf
+    hostname: telegraf
+    networks:
+      - rtmd-network
+    # get current user id and group: `id -u` and `id -g`
+    # Get docker.sock GID: stat -c '%g' /var/run/docker.sock
+    user: telegraf:1001 # Run as root group
+    environment:
+      - DOCKER_INFLUX_URL=http://rtmd-influx-db:8086
+      - DOCKER_INFLUX_ORG=myorg
+      - DOCKER_INFLUX_BUCKET=telegraf
+      - DOCKER_INFLUX_TOKEN=password
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+volumes:
+  influx-data:
+    name: 'rtmd-influx'
+
+networks:
+  rtmd-network:
+    name: 'rtmd-network'
+
+
