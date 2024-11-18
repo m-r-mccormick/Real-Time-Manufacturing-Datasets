@@ -1,217 +1,104 @@
-# Dataset Replay Instructions
+# Real-Time Manufacturing Datasets Tooling
 
-This directory contains multiple docker-compose stacks which jump-start the consumption of [Real-Time Manufacturing Datasets](https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets).
+This directory contains pre-configured tooling which is intended to jump-start the consumption of [Real-Time Manufacturing Datasets](https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets) (RTMD).
 
-If using git on windows, ensure that files are checked out with linux line endings (LF, not CRLF) before cloning this repository:
+## Operating System Support
+
+The provided tooling has been developed and tested on [Debian](https://www.debian.org/). Other operating systems (e.g., Windows and MacOS) are not officially supported at this time, but the tooling has been confirmed to operate successfully on Windows 10. Likewise, [Debian](https://www.debian.org/) derivatives (e.g., [Ubuntu](https://ubuntu.com/), [Linux Mint](https://linuxmint.com/)) are likely to operate successfully.
+
+## Dependencies
+
+The provided tooling is dependent on `make` and `docker` to operate. Both must be installed before utilizing the provided tooling:
+
+1. Install Make
+
+    | OS | Instructions |
+    |----|--------------|
+    | Debian | 1. Install Make:<pre>sudo apt-get install make</pre>2. Verify that `make` is installed by opening a terminal and running:<pre>make --version</pre> |
+    | Windows | 1. Download and install [Make for Windows](https://gnuwin32.sourceforge.net/packages/make.htm) ([Setup](https://gnuwin32.sourceforge.net/downlinks/make.php) next to `Complete package, except sources`)<br>2. Add `C:\Program Files (x86)\GnuWin32\bin` to the `Path` environment variable: `Start Menu > Search > Edit environment variables for your account > Path > Edit... > New`<br>3. Verify that `make` is in the `Path` environment variable by opening the command prompt or powershell and executing:<pre>make --version</pre> |
+
+2. Install Docker
+
+    | OS | Instructions |
+    |----|--------------|
+    | Debian | 1. Install Docker:<pre>sudo apt-get install docker docker.io docker-compose</pre>2. Add the current user to the docker group so the user can execute docker commands without `sudo`:<br><pre>sudo groupadd docker<br>sudo usermod -aG docker $USER</pre>3. Restart the machine:<br><pre>sudo reboot</pre> |
+    | Windows | 1. Install Windows Subsystem for Linux (WSL) using command prompt or powershell as administrator via:<pre>Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform<br>wsl --install<br>wsl --update</pre>2. Download and install [Docker Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/).<br>3. Reboot<br>4. Start `Docker Desktop`.<br>4. Verify that `docker` is operational by opening the command prompt or powershell and executing:<pre>docker run --rm -it hello-world</pre> |
+
+3. Install Git
+
+    | OS | Instructions |
+    |----|--------------|
+    | Debian | 1. Install Git:<pre>sudo apt-get install git</pre>2. Verify that `git` is installed by opening a terminal and running:<pre>git --version</pre> |
+    | Windows | 1. Download and install [Git for Windows Setup](https://git-scm.com/downloads/win).<br>2. Verify that `git` is installed by opening a terminal and running:<pre>git --version</pre> |
+
+## Repository Cloning
+
+This repository can be cloned (i.e., downloaded) via:
+```bash
+git clone https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets.git
 ```
+
+There are two types of text file line endings:
+
+- `CRLF`: Carriage Return and Line Feed `\r\n` (Windows)
+- `LF`: Line Feed `\n` (OSX, Linux)
+
+Files inside this repository are used to build tooling inside of Linux docker containers. Since Linux expects `LF` line endings, tooling files must use `LF` line endings and not `CRLF` line endings. `* text eol=lf` inside the `.gitattributes` file should configure git to automatically use `LF` line endings. After cloning the RTMD repository, you can check the line endings of cloned files using:
+```bash
+git ls-files --eol
+```
+
+This will output similar to:
+```text
+i/lf    w/lf    attr/text eol=lf      	readme.md
+```
+
+If line endings are not `LF` (i.e., `eol=lf`), line endings can be globally configured to `LF` using the following command, then the repository must be deleted and re-cloned:
+```bash
 git config --global core.autocrlf input
+git clone https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets.git
 ```
 
-The stacks have been developed and tested on [Debian](https://www.debian.org/). Other operating systems (e.g., Windows and MacOS) are not officially supported. However, debian derivatives (e.g., [Ubuntu](https://ubuntu.com/), [Linux Mint](https://linuxmint.com/)) are likely to work.
+## Docker-Compose Stacks
+
+The provided tooling consists of multiple docker-compose stacks:
+
+| Stack | Description | Endpoints |
+|-------|-------------|-------|
+| [broker](broker/) | A MQTT broker. | `mqtt://localhost:1883` |
+| [ignition](ignition/) | An [Inductive Automation Ignition](https://inductiveautomation.com/) Gateway. | [Gateway Web UI](http://localhost:8088/), [Demo Project](http://localhost:8088/data/perspective/client/DemoProject) |
+| [influx](influx/) | An [InfluxDB](https://www.influxdata.com/) time-series historian. | [InfluxDB Web UI](http://localhost:8086) |
+| [mes](mes/) | A [MariaDB](https://mariadb.org/) cache database for MES data. | `localhost:3307` |
+| [player](player/) | An application for capturing and replaying RTMD datasets. | |
 
 All services in all stacks use the following credentials:
 - Username: `admin`
 - Password: `password`
 
-The stacks should be started in the order listed below, and stopped in the reverse order.
+If manually starting the stacks, they should be started in the order listed below, and stopped in the reverse order. Since some stacks are dependent on other stacks, this ensures that stack dependencies are met when starting stacks. For example, since the `player` publishes data into the `broker`, the `broker` must be started before the `player`. Stopping stacks in reverse order ensures that stacks will not crash due to a dependency being stopped, which may cause an issue when re-starting stacks.
 
-### Makefile
+## Makefile
 
-To make operating all stacks seamless, a `makefile` is included. In this directory, run `make` to see available commands. To get up and running quickly:
+To make operating all stacks seamless, a `makefile` is included. In this directory, run `make` to see available commands:
 
-1. Install Make
-   - Debian
-     ```bash
-     sudo apt-get install make
-     ```
-   - Windows
-     - Download and install [Make for Windows](https://gnuwin32.sourceforge.net/packages/make.htm).
-     - Ensure that `C:\Program Files (x86)\GnuWin32\bin` is in the `Path` environment variable.
-2. Install Docker
-   - Debian
-     ```bash
-     sudo apt-get install docker docker.io docker-compose
-     ```
-     Add user to the docker group so the user can execute docker commands without `sudo`:
-     ```bash
-     sudo groupadd docker
-     sudo usermod -aG docker $USER
-     sudo reboot
-     ```
-   - Windows
-     - Download and install [Docker Desktop on Windows](https://docs.docker.com/desktop/install/windows-install/).
-3. Place `base.gwbk` in the `ignition/restore/` directory.
-4. Place the [Hydra-MQTT](https://github.com/m-r-mccormick/Hydra-MQTT/releases) module (`Hydra-MQTT.modl`) in the `ignition/build/modules/` directory.
-5. Place datasets (`*.jsonl`) in the `player/datasets/` directory.
-6. Run `make up`
-7. Start the Ignition gateway at [http://localhost:8088](http://localhost:8088).
-8. Open the Ignition perspective demo project at [http://localhost:8088/data/perspective/client/DemoProject](http://localhost:8088/data/perspective/client/DemoProject).
-9. Open the InfluxDB explorer at [http://localhost:8086](http://localhost:8086) and query data in the `telegraf` bucket.
-10. When done, run `make down` or `make clear`
+  ```text
+  Available Commands:
+    make up    - Start All Stacks
+    make down  - Stop All Stacks
+    make clear - Stop All Stacks and Remove All RTMD Volumes/Data
+    make size  - Display the Size of Docker Volumes
+  ```
 
-### 1. Broker
+To get up and running quickly:
 
-This stack contains a MQTT broker running on port `1883`. You can view real-time data passing through the broker by connecting to `mqtt://localhost:1883` with no username and no password using [MQTT Explorer](http://mqtt-explorer.com/).
-
-1. Start the stack:
-```bash
-cd broker
-docker-compose up -d --build
-cd ..
-```
-
-2. Stop the stack:
-```bash
-cd broker
-docker-copose down
-cd ..
-```
-
-### 2. Ignition
-
-This stack contains an [Ignition](https://inductiveautomation.com/) gateway and [MariaDB](https://mariadb.org/) historian. Both are pre-configured via a gateway backup (`base.gwbk`). The Ignition gateway provides real-time visualization of data visible in a [Demo Project](http://localhost:8088/data/perspective/client/DemoProject). The MariaDB historian is utilized by the Ignition gateway and is not intended to be used by the end user.
-
-1. Download the gateway backup (`base.gwbk`) and place it in the `ignition/restore/` directory.
-    - Gateway backups are provided by the author of datasets, or on the [Releases](https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets/releases) page.
-2. Download the [Hydra-MQTT](https://github.com/m-r-mccormick/Hydra-MQTT/releases) module (`*.modl`) and place it in the `ignition/build/modules/` directory.
-
-1. Start the stack:
-```bash
-cd ignition
-docker-compose up -d --build
-cd ..
-```
-
-2. Log in at [http://localhost:8088/](http://localhost:8088/).
-3. Open the [Demo Project](http://localhost:8088/data/perspective/client/DemoProject) via `Home > Perspective Session Launcher > View Projects > DemoProject > Launch Project`.
-
-4. Stop the stack:
-```bash
-cd ignition
-docker-copose down
-cd ..
-```
-
-### 3. MES
-
-This stack contains a [MariaDB](https://mariadb.org/) database which stores MES data, and python application which ingests MES change data capture events and stores them in the database. The reconstructed MES database can be viewed using a utility such as [DBeaver](https://dbeaver.io/) via `localhost:3307`
-
-1. Clear/reset the database (optional):
-```bash
-docker volume rm rtmd-mes
-```
-
-2. Start the stack:
-```bash
-cd mes
-docker-compose up -d --build
-cd ..
-```
-
-3. Connect using a viewer via `localhost:3307`
-
-4. Stop the stack:
-```bash
-cd mes
-docker-copose down
-cd ..
-```
-
-### 4. Influx
-
-This stack contains an instance of [InfluxDB](https://www.influxdata.com/) to store time series data, and an instance of [Telegraf](https://www.influxdata.com/time-series-platform/telegraf/) to consume MQTT data and store it in the influx database. By default, telegraf is configured to ignore video topics to reduce storage size and improve performance.
-
-1. Start the stack:
-```bash
-cd influx
-docker-compose up -d --build
-cd ..
-```
-
-2. Open the influx data explorer at [http://localhost:8086](http://localhost:8086)
-
-3. Stop the stack:
-```bash
-cd influx
-docker-copose down
-cd ..
-```
-
-### 5. Player
-
-This stack contains a python application which replays `*.jsonl` datasets into the MQTT broker. The application will loop through all datasets in the `player/datasets/` directory and play them sequentially. After all datasets have been replayed, it will loop back through all the datasets indefinitely. To disable indefinite playback, remove `restart: unless-stopped` from `docker-compose.yml`.
-
-1. Download datasets (`*.jsonl`) and place them in the `player/datasets/` directory.
-
-2. Start the stack:
-```bash
-cd player
-docker-compose up -d --build
-cd ..
-```
-
-3. Stop the stack:
-```bash
-cd player
-docker-copose down
-cd ..
-```
-
-Examples for consuming data using python can be found [here](player/build/examples).
-
-# Dataset Capture Instructions
-
-### Capture From Provided Broker
-
-To capture data from the provided broker, modify `player/docker-compose.yml` environment variables:
-
-```bash
-    environment:
-      - BROKER_HOST=broker
-      - BROKER_PORT=1883
-#      - MODE=replay
-      - MODE=capture
-      - BROKER_SUBSCRIPTION=Enterprise/#
-```
-
-Then, start the broker and player stacks:
-
-```bash
-cd broker
-docker-compose up -d --build
-cd ..
-cd player
-docker-compose up -d --build
-cd ..
-```
-
-### Capture From External Broker
-
-To capture data from an external broker, modify `player/docker-compose.yml` environment variables:
-
-```bash
-    environment:
-      - BROKER_HOST=192.168.1.8
-      - BROKER_PORT=1883
-#      - MODE=replay
-      - MODE=capture
-      - BROKER_SUBSCRIPTION=Enterprise/#
-```
-
-Then, start the player stack:
-
-```bash
-cd player
-docker-compose up -d --build
-cd ..
-```
-
-### Captured Datasets
-
-Captured datasets will be saved to the `player/datasets/` directory with the capture start time as the file name.
-
-On linux, captured datasets will be owned by root. To change dataset ownership to the current user after capturing, run:
-```bash
-sudo chown $USER:$USER player/datasets/*.jsonl
-```
+1. Place the Ignition Gateway Backup (`base.gwbk`, download from dataset release) in the `ignition/restore/` directory.
+2. Place the Ignition [Hydra-MQTT](https://github.com/m-r-mccormick/Hydra-MQTT/releases) module (`Hydra-MQTT.modl`) in the `ignition/build/modules/` directory.
+3. Place RTMD datasets (`*.jsonl`, download from dataset release) in the `player/datasets/` directory.
+4. Run `make up` to build and start all stacks.
+5. Start the Ignition Gateway at [http://localhost:8088](http://localhost:8088).
+6. Open the Ignition Perspective demo project at [http://localhost:8088/data/perspective/client/DemoProject](http://localhost:8088/data/perspective/client/DemoProject).
+7. Open the InfluxDB explorer at [http://localhost:8086](http://localhost:8086) and query data in the `telegraf` bucket.
+8. Run:
+  - `make down` to stop all stacks, or
+  - `make clear` to stop all stacks and remove all RTMD data. (This will remove RTMD docker volumes. This will not delete datasets in the `player/datasets/` directory, and will not remove non-RTMD docker volumes.)
 

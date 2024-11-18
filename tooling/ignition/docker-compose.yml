@@ -17,6 +17,8 @@ services:
     command: >
       -r /restore.gwbk
     environment:
+# Uncomment this line to automatically accept the license agreement on startup
+#      - ACCEPT_IGNITION_EULA=Y
       - DISABLE_QUICKSTART=true
       - GATEWAY_ADMIN_USERNAME=admin
       - GATEWAY_ADMIN_PASSWORD=password

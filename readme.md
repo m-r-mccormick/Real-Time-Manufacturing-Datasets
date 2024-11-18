@@ -7,7 +7,7 @@
 
 ## Academic Citations
 
-If utilizing this repository to support an academic publication, please cite [this](http://dx.doi.org/10.13140/RG.2.2.25803.60967) paper. Likewise, if distributing a dataset which utilizes this method, please include and request that anyone utilizing your dataset also cites [this](http://dx.doi.org/10.13140/RG.2.2.25803.60967) paper.
+If utilizing this repository to support an academic publication, please cite the [RTMD Method](http://dx.doi.org/10.13140/RG.2.2.25803.60967) paper. Likewise, if distributing a dataset which utilizes this method, please include and request that anyone utilizing your dataset also cites the [RTMD Method](http://dx.doi.org/10.13140/RG.2.2.25803.60967) paper.
 
 ```bibtex
 @article{mccormick-2024-real-time-manufacturing,
