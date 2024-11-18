@@ -29,3 +29,4 @@ Instructions for utilizing this repository can be found [here](tooling/).
 | Dataset                    | Description                                                                |
 |----------------------------|----------------------------------------------------------------------------|
 | [RTMD Proof of Concept](https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets/releases/tag/v0.0.1) | A small dataset which demonstrates the feasibility of the proposed method. |
+| [Real-Time Rocket Assembly Line](https://github.com/m-r-mccormick/Real-Time-Manufacturing-Datasets/releases/tag/v0.0.2) | Multiple datasets from a rocket assembly line. |
